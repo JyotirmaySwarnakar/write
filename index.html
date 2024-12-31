@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A modern, responsive text editor with rich formatting options">
+    <title>Writ Text Editor</title>
+    <link rel="shortcut icon" href="writelogo.jpg" type="image/x-icon"> 
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
+
+        :root {
+            --bg-color: #f5f6f8;
+            --text-color: #333;
+            --toolbar-bg: #f8f9fa;
+            --button-bg: white;
+            --button-hover: #f1f5f9;
+            --border-color: #e2e8f0;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --success-bg: #10b981;
+            --transition-speed: 0.2s;
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #1a1a1a;
+            --text-color: #e0e0e0;
+            --toolbar-bg: #2d2d2d;
+            --button-bg: #3d3d3d;
+            --button-hover: #4d4d4d;
+            --border-color: #404040;
+            --shadow-color: rgba(0, 0, 0, 0.3);
+            --success-bg: #059669;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--bg-color);
+            min-height: 100vh;
+            color: var(--text-color);
+            padding: 20px;
+            font-family: 'Poppins', sans-serif;
+            transition: background-color var(--transition-speed);
+            line-height: 1.6;
+        }
+
+        .toolbar {
+            position: sticky;
+            top: 20px;
+            padding: 16px;
+            background: var(--toolbar-bg);
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            z-index: 100;
+            box-shadow: 0 4px 12px var(--shadow-color);
+            transition: all var(--transition-speed);
+        }
+
+        .toolbar button,
+        .toolbar select {
+            padding: 8px 12px;
+            border: none;
+            background: var(--button-bg);
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-color);
+            font-size: 14px;
+            font-family: inherit;
+            transition: all var(--transition-speed);
+        }
+
+        .toolbar button:hover {
+            background: var(--button-hover);
+            transform: translateY(-1px);
+        }
+
+        .toolbar select {
+            outline: none;
+            min-width: 120px;
+            appearance: none;
+            background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>");
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+            background-size: 16px;
+            padding-right: 32px;
+        }
+
+        #editor {
+            width: 100%;
+            min-height: calc(100vh - 160px);
+            padding: 40px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            outline: none;
+            font-size: 16px;
+            color: var(--text-color);
+            background: var(--button-bg);
+            margin-bottom: 30px;
+            transition: all var(--transition-speed);
+            overflow-wrap: break-word;
+        }
+
+        #editor:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+        }
+
+        .word-count {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: var(--toolbar-bg);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            box-shadow: 0 2px 8px var(--shadow-color);
+            transition: all var(--transition-speed);
+            z-index: 99;
+        }
+
+        .success-message {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--success-bg);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            display: none;
+            z-index: 1002;
+            text-align: center;
+            min-width: 200px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            font-weight: 500;
+        }
+
+        
+
+        .social-links a {
+            color: inherit;
+            margin-right: 15px;
+            text-decoration: none;
+            opacity: 0.8;
+            transition: opacity var(--transition-speed);
+        }
+
+        .social-links a:hover {
+            opacity: 1;
+        }
+
+        .theme-switch {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--toolbar-bg);
+            padding: 8px 16px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 8px var(--shadow-color);
+            cursor: pointer;
+            z-index: 99;
+            transition: all var(--transition-speed);
+        }
+        .word-count {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: var(--toolbar-bg);
+            padding: 8px 16px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 8px var(--shadow-color);
+            }
+
+        
+        .file-input {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .toolbar {
+                padding: 10px;
+                top: 10px;
+            }
+
+            .toolbar button,
+            .toolbar select {
+                padding: 6px 10px;
+                font-size: 12px;
+            }
+
+            .toolbar button span {
+                display: none;
+            }
+
+            #editor {
+                padding: 20px;
+                min-height: calc(100vh - 140px);
+            }
+
+            
+
+            .word-count {
+                bottom: 20px;
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -10px);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, 0);
+            }
+        }
+        .menu-button {
+            padding: 8px 12px;
+            border: none;
+            background: var(--button-bg);
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            color: var(--text-color);
+            font-size: 14px;
+            margin-right: 10px;
+            transition: all var(--transition-speed);
+        }
+
+        .menu-button:hover {
+            background: var(--button-hover);
+            transform: translateY(-1px);
+        }
+
+        .about-panel {
+            position: fixed;
+            top: 0;
+            left: -350px;
+            width: 350px;
+            height: 100vh;
+            background: var(--toolbar-bg);
+            padding: 20px;
+            box-shadow: 4px 0 12px var(--shadow-color);
+            transition: left var(--transition-speed);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        .about-panel.active {
+            left: 0;
+        }
+
+        .about-panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .app-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .app-logo svg {
+            width: 40px;
+            height: 40px;
+        }
+
+        .circular-image {
+  width: 100px; /* Adjust size as needed */
+  height: 100px;
+  border-radius: 50%; /* Makes it perfectly round */
+  overflow: hidden; /* Hides any part of the image outside the circle */
+}
+        .app-logo h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .close-panel {
+            background: none;
+            border: none;
+            color: var(--text-color);
+            cursor: pointer;
+            font-size: 20px;
+            padding: 5px;
+        }
+
+        .about-content {
+            line-height: 1.6;
+        }
+
+        .about-content h2 {
+            font-size: 18px;
+            margin: 15px 0 10px;
+        }
+
+        .about-content p {
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            visibility: hidden;
+            transition: all var(--transition-speed);
+            z-index: 999;
+        }
+
+        .overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+    </style>
+</head>
+<body>
+    <div class="toolbar">
+        <button class="menu-button" onclick="toggleAboutPanel()" aria-label="Menu">
+            <i class="fas fa-bars"></i>
+        </button>
+
+        <select id="font-family" aria-label="Font Family">
+            <option value="Arial">Arial</option>
+            <option value="Times New Roman">Times New Roman</option>
+            <option value="Helvetica">Helvetica</option>
+            <option value="Georgia">Georgia</option>
+            <option value="Courier New">Courier New</option>
+            <option value="Verdana">Verdana</option>
+        </select>
+
+        <select id="font-size" aria-label="Font Size">
+            <option value="12px">12</option>
+            <option value="14px">14</option>
+            <option value="16px" selected>16</option>
+            <option value="18px">18</option>
+            <option value="20px">20</option>
+            <option value="24px">24</option>
+        </select>
+
+        <button onclick="format('bold')" aria-label="Bold">
+            <i class="fas fa-bold"></i>
+        </button>
+
+        <button onclick="format('italic')" aria-label="Italic">
+            <i class="fas fa-italic"></i>
+        </button>
+
+        <button onclick="format('underline')" aria-label="Underline">
+            <i class="fas fa-underline"></i>
+        </button>
+
+        <button onclick="format('strikethrough')" aria-label="strikethrough">
+            <i class="fas fa-strikethrough"></i>
+        </button>
+
+        <button onclick="alignText('left')" aria-label="Align Left">
+            <i class="fas fa-align-left"></i>
+        </button>
+
+        <button onclick="alignText('center')" aria-label="Align Center">
+            <i class="fas fa-align-center"></i>
+        </button>
+
+        <button onclick="alignText('right')" aria-label="Align Right">
+            <i class="fas fa-align-right"></i>
+        </button>
+
+        <button onclick="copyText()" aria-label="Copy">
+            <i class="fas fa-copy"></i>
+            <span>Copy</span>
+        </button>
+
+        <button onclick="cutText()" aria-label="Cut">
+            <i class="fas fa-cut"></i>
+            <span>Cut</span>
+        </button>
+
+        <button onclick="pasteText()" aria-label="Paste">
+            <i class="fas fa-paste"></i>
+            <span>Paste</span>
+        </button>
+
+        <button onclick="generateLorem()" aria-label="Generate Lorem Ipsum">
+            <i class="fas fa-text-width"></i>
+            <span>Generate Random Text</span>
+        </button>
+
+        <button onclick="document.getElementById('fileInput').click()" aria-label="Upload">
+            <i class="fas fa-upload"></i>
+            <span>Upload</span>
+        </button>
+        
+        <button onclick="downloadFile('txt')" aria-label="Download">
+            <i class="fas fa-download"></i>
+            <span>Download</span>
+        </button>
+        
+
+        <input type="file" id="fileInput" class="file-input" accept=".txt,.md,.html">
+    </div>
+
+    <div contenteditable="true" id="editor" aria-label="Text Editor" role="textbox" aria-multiline="true"></div>
+
+    <div class="word-count" aria-live="polite">Words: 0</div>
+
+    <div class="theme-switch" onclick="toggleTheme()" role="button" aria-label="Toggle Theme">
+        <i class="fas fa-moon"></i>
+        <span>Theme</span>
+    </div>
+
+    
+    <div class="success-message" id="success-message" role="alert" aria-live="polite"></div>
+
+    <div class="about-panel" id="aboutPanel">
+        <div class="about-panel-header">
+            <div class="app-logo">
+                <img src="writelogo.jpg" alt="Write" class="circular-image">
+                <h1>Write Text Editor</h1>
+            </div>
+            <button class="close-panel" onclick="toggleAboutPanel()" aria-label="Close">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="about-content">
+            
+            
+            <h2>Features that makes us different</h2>
+            <p>• Random text generator<br>
+            • Dark/Light theme<br>
+            • File import/export<br>
+            • Auto-save<br>
+            • Word count<br>
+            • Keyboard shortcuts</p>
+            
+            <h2>Version</h2>
+            <p>1.0.0</p>
+            
+            <h2>Developer</h2>
+            <p>Devloped by : <a href="https://bit.ly/jatir" target="_blank">Jyotirmay Swarnakar</a>
+                
+            <h2>Copyright</h2>
+            <p>© 2024 Write Text Editor. All rights reserved.</p>
+        </div>
+    </div>
+
+    <div class="overlay" id="overlay" onclick="toggleAboutPanel()"></div>
+
+    <script>
+        // Cache DOM elements
+        const editor = document.getElementById('editor');
+        const successMessage = document.getElementById('success-message');
+        const wordCount = document.querySelector('.word-count');
+        const themeSwitch = document.querySelector('.theme-switch');
+
+        // Debounce function for performance optimization
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        
+
+        // Theme Toggle
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            html.setAttribute('data-theme', newTheme);
+            
+            const themeIcon = document.querySelector('.theme-switch i');
+            themeIcon.className = newTheme === 'light' ? 'fas fa-moon' : 'fas fa-sun';
+            
+            localStorage.setItem('theme', newTheme);
+            showMessage(`${newTheme.charAt(0).toUpperCase() + newTheme.slice(1)} theme activated`);
+        }
+
+        // Word Count
+        const updateWordCount = debounce(() => {
+            const text = editor.innerText || editor.textContent;
+            const words = text.trim().split(/\s+/).filter(word => word.length > 0);
+            wordCount.textContent = `Words: ${words.length}`;
+        }, 200);
+
+        editor.addEventListener('input', updateWordCount);
+
+        // Font Controls
+        document.getElementById('font-family').addEventListener('change', (e) => {
+            editor.style.fontFamily = e.target.value;
+        });
+
+        document.getElementById('font-size').addEventListener('change', (e) => {
+            editor.style.fontSize = e.target.value;
+        });
+
+        // Text Formatting
+        function format(command) {
+            document.execCommand(command, false, null);
+            editor.focus();
+        }
+
+        // Text Alignment
+        function alignText(alignment) {
+            document.execCommand(`justify${alignment}`, false, null);
+            editor.focus();
+        }
+
+        // Copy Text
+        async function copyText() {
+            try {
+                const selection = window.getSelection();
+                const text = selection.toString() || editor.innerText;
+                
+                await navigator.clipboard.writeText(text);
+                showMessage('Text copied!');
+            } catch (err) {
+                document.execCommand('copy');
+                showMessage('Text copied!');
+            }
+        }
+
+        // Cut Text
+        function cutText() {
+            if (window.getSelection().toString().length > 0) {
+                document.execCommand('cut');
+                showMessage('Text cut!');
+                updateWordCount();
+            } else {
+                showMessage('Please select text to cut');
+            }
+        }
+
+        // Paste Text
+        async function pasteText() {
+            try {
+                const text = await navigator.clipboard.readText();
+                document.execCommand('insertText', false, text);
+                showMessage('Text pasted!');
+            } catch (err) {
+                document.execCommand('paste');
+            }
+            updateWordCount();
+        }
+
+        // File Upload
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                editor.innerHTML = e.target.result
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;');
+                updateWordCount();
+                showMessage('File uploaded successfully!');
+            };
+            reader.onerror = function() {
+                showMessage('Error reading file!');
+            };
+            reader.readAsText(file);
+        });
+
+        // Download File
+        function downloadFile(format) {
+            const content = editor.innerText || editor.textContent;
+            
+            if (!content.trim()) {
+                showMessage('Document is empty!');
+                return;
+            }
+
+            const filename = `write_document_${new Date().toISOString().slice(0,10)}.${format}`;
+            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showMessage(`File downloaded as ${filename}`);
+        }
+
+        // Generate Lorem Ipsum
+        function generateLorem() {
+            const loremText = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
+            
+            const selection = window.getSelection();
+            if (selection.toString().length > 0) {
+                document.execCommand('insertText', false, loremText);
+            } else {
+                editor.innerHTML += (editor.innerHTML && !editor.innerHTML.endsWith('<br>') ? '<br><br>' : '') + loremText;
+            }
+            
+            updateWordCount();
+            showMessage('Lorem Ipsum text added!');
+        }
+
+        // Success Message
+        let messageTimeout;
+        function showMessage(text) {
+            successMessage.textContent = text;
+            successMessage.style.display = 'block';
+            successMessage.style.animation = 'fadeIn 0.3s ease-out';
+            
+            clearTimeout(messageTimeout);
+            messageTimeout = setTimeout(() => {
+                successMessage.style.display = 'none';
+            }, 3000);
+        }
+
+        // Keyboard Shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key.toLowerCase()) {
+                    case 's':
+                        e.preventDefault();
+                        downloadFile('txt');
+                        break;
+                    case 'b':
+                        e.preventDefault();
+                        format('bold');
+                        break;
+                    case 'i':
+                        e.preventDefault();
+                        format('italic');
+                        break;
+                    case 'u':
+                        e.preventDefault();
+                        format('underline');
+                        break;
+                }
+            }
+        });
+
+        // Load saved theme
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) {
+                document.documentElement.setAttribute('data-theme', savedTheme);
+                const themeIcon = document.querySelector('.theme-switch i');
+                themeIcon.className = savedTheme === 'light' ? 'fas fa-moon' : 'fas fa-sun';
+            }
+
+            // Prevent drag and drop default behavior
+            document.addEventListener('dragover', e => e.preventDefault());
+            document.addEventListener('drop', e => e.preventDefault());
+
+            // Initialize
+            updateWordCount();
+        });
+
+        // Auto-save functionality
+        const saveToLocalStorage = debounce(() => {
+            localStorage.setItem('editorContent', editor.innerHTML);
+        }, 1000);
+
+        editor.addEventListener('input', saveToLocalStorage);
+
+        // Load saved content
+        const savedContent = localStorage.getItem('editorContent');
+        if (savedContent) {
+            editor.innerHTML = savedContent;
+            updateWordCount();
+        }
+        function toggleAboutPanel() {
+            const panel = document.getElementById('aboutPanel');
+            const overlay = document.getElementById('overlay');
+            
+            panel.classList.toggle('active');
+            overlay.classList.toggle('active');
+            
+            // Prevent scrolling when panel is open
+            document.body.style.overflow = panel.classList.contains('active') ? 'hidden' : '';
+        }
+
+        // Close panel on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && document.getElementById('aboutPanel').classList.contains('active')) {
+                toggleAboutPanel();
+            }
+        });
+    </script>
+</body>
+</html>
